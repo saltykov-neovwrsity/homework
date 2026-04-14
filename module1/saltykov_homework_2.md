@@ -47,7 +47,7 @@ support@maincopy:/$ ln ~/lab2/file.txt ~/lab2/hard_link.txt
 support@maincopy:/$ ln -s ~/lab2/file.txt ~/lab2/symbolic_link.txt
 support@maincopy:/$ find /home -name "file.txt"
 /home/support/lab2/file.txt
-support@maincopy:~/lab2$ ls ~/lab2
+support@maincopy:/$ ls ~/lab2
 file.txt  hard_link.txt  renamed_file.txt  symbolic_link.txt
 ```
 
