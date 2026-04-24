@@ -19,7 +19,7 @@ support@maincopy:~$ htop
 ```
 <img width="1489" height="198" alt="image" src="https://github.com/user-attachments/assets/faeea324-d88d-4d47-943c-2d3057591a01" />
 
-keybord: shift+M
+keyboard: shift+M
 
 <img width="1178" height="199" alt="image" src="https://github.com/user-attachments/assets/7a0378e4-23e6-4bdd-8894-02095f37a333" />
 
