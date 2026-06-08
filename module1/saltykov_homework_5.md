@@ -25,10 +25,15 @@ ping 8.8.8.8
 Приклади сервісів/портів, які слухають з'єднання:
 
 22/tcp — SSH
+
 3306/tcp — MySQL
+
 5432/tcp — PostgreSQL
+
 6379/tcp — Redis
+
 8000/tcp — вебсервіс
+
 53/tcp і 53/udp — DNS resolver
 
 ```bash
