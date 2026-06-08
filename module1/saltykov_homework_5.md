@@ -131,10 +131,12 @@ support@maincopy:~$ ssh-copy-id support@192.168.8.36
 Number of key(s) added: 1
 
 support@maincopy:~$ nano ~/.ssh/config
+support@maincopy:~$ cat .ssh/config
 Host testforumt
         HostName 192.168.8.36
         User support
         IdentityFile ~/.ssh/id_ed25519
+
 support@maincopy:~$ ssh testforumt
 Welcome to Ubuntu 24.04.4 LTS (GNU/Linux 6.8.0-124-generic x86_64)
 ...
