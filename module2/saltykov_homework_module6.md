@@ -1,197 +1,324 @@
 # Домашнє завдання №6
 ## Автоматизація і Shell-скрипти
 
----
+### Варіант B — скрипт деплою застосунку
 
-## Завдання 1. Мережева діагностика
+Для перевірки роботи скрипта використано навчальний Python-застосунок, розташований у каталозі:
 
-Було виконано команду ip a.
-
-Основний мережевий інтерфейс: ens160
-Локальна IP-адреса інтерфейсу: 192.168.8.34/26
-
-Також на сервері присутні docker-інтерфейси:
-docker0 — 172.17.0.1/16, а також інші службові та docker інтерфейси
-
-Доступ до інтернету перевірено командою:
-
-ping 8.8.8.8
-
-Результат: доступ до інтернету є, оскільки отримано відповіді від 8.8.8.8.
-Втрат пакетів немає: 0% packet loss.
-
-Командою ss -tulpn перевірено відкриті listening-порти.
-
-Приклади сервісів/портів, які слухають з'єднання:
-
-22/tcp — SSH
-
-3306/tcp — MySQL
-
-5432/tcp — PostgreSQL
-
-6379/tcp — Redis
-
-8000/tcp — вебсервіс
-
-53/tcp і 53/udp — DNS resolver
-
-```bash
-
-support@maincopy:~$ ip a
-1: ens160: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
-    link/ether 00:0c:29:fc:93:79 brd ff:ff:ff:ff:ff:ff
-    altname enp3s0
-    inet 192.168.8.34/26 metric 100 brd 192.168.8.63 scope global dynamic ens160
-       valid_lft 445403sec preferred_lft 445403sec
-    inet6 fe80::20c:29ff:fefc:9379/64 scope link
-       valid_lft forever preferred_lft forever
-2: docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
-    link/ether 66:77:a1:05:14:89 brd ff:ff:ff:ff:ff:ff
-    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
-       valid_lft forever preferred_lft forever
-    inet6 fe80::6477:a1ff:fe05:1489/64 scope link
-       valid_lft forever preferred_lft forever
-
-...
-
-support@maincopy:~$ ping 8.8.8.8
-PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
-64 bytes from 8.8.8.8: icmp_seq=1 ttl=115 time=14.4 ms
-64 bytes from 8.8.8.8: icmp_seq=2 ttl=115 time=14.3 ms
-64 bytes from 8.8.8.8: icmp_seq=3 ttl=115 time=14.1 ms
-64 bytes from 8.8.8.8: icmp_seq=4 ttl=115 time=14.1 ms
-64 bytes from 8.8.8.8: icmp_seq=5 ttl=115 time=14.1 ms
-^C
---- 8.8.8.8 ping statistics ---
-5 packets transmitted, 5 received, 0% packet loss, time 4006ms
-rtt min/avg/max/mdev = 14.080/14.208/14.436/0.132 ms
-
-support@maincopy:~$ ss -tulpn
-Netid             State              Recv-Q             Send-Q                               Local Address:Port                          Peer Address:Port            Process
-udp               UNCONN             0                  0                                       127.0.0.54:53                                 0.0.0.0:*
-udp               UNCONN             0                  0                                    127.0.0.53%lo:53                                 0.0.0.0:*
-udp               UNCONN             0                  0                              192.168.8.34%ens160:68                                 0.0.0.0:*
-tcp               LISTEN             0                  4096                                       0.0.0.0:3306                               0.0.0.0:*
-tcp               LISTEN             0                  4096                                     127.0.0.1:32821                              0.0.0.0:*
-tcp               LISTEN             0                  4096                                       0.0.0.0:22                                 0.0.0.0:*
-tcp               LISTEN             0                  4096                                    127.0.0.54:53                                 0.0.0.0:*
-tcp               LISTEN             0                  4096                                       0.0.0.0:8000                               0.0.0.0:*
-tcp               LISTEN             0                  4096                                       0.0.0.0:6379                               0.0.0.0:*
-tcp               LISTEN             0                  4096                                       0.0.0.0:5432                               0.0.0.0:*
-tcp               LISTEN             0                  4096                                 127.0.0.53%lo:53                                 0.0.0.0:*
-tcp               LISTEN             0                  4096                                          [::]:3306                                  [::]:*
-tcp               LISTEN             0                  4096                                          [::]:22                                    [::]:*
-tcp               LISTEN             0                  4096                                          [::]:8000                                  [::]:*
-tcp               LISTEN             0                  4096                                          [::]:6379                                  [::]:*
-tcp               LISTEN             0                  4096                                          [::]:5432                                  [::]:*
-
+```text
+/home/support/UMT-pythonweb-hw-11
 ```
 
----
+## Перевірка вихідного каталогу
 
-## Завдання 2. SSH-доступ з ключами та config
-
----
-
-Для тестування розгорнув ще одну віртуальну машину на Ubuntu 24.04. IP адреса: 192.168.8.36/26
-
-Linux-клієнт: maincopy
-IP: 192.168.8.34
-
-Linux-сервер: testforumt
-IP: 192.168.8.36
-
-
-Виконую на maincopy:
+Перевіряємо вміст каталогу застосунку:
 
 ```bash
-
-support@maincopy:~$ ping 192.168.8.36
-PING 192.168.8.36 (192.168.8.36) 56(84) bytes of data.
-64 bytes from 192.168.8.36: icmp_seq=1 ttl=64 time=0.332 ms
-64 bytes from 192.168.8.36: icmp_seq=2 ttl=64 time=0.306 ms
-^C
---- 192.168.8.36 ping statistics ---
-2 packets transmitted, 2 received, 0% packet loss, time 1042ms
-
-support@maincopy:~$ ls ~/.ssh
-authorized_keys
-
-support@maincopy:~$ ssh-keygen -t ed25519
-Generating public/private ed25519 key pair.
-...
-
-support@maincopy:~$ ls ~/.ssh
-authorized_keys  id_ed25519  id_ed25519.pub
-
-support@maincopy:~$ ssh-copy-id support@192.168.8.36
-/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/support/.ssh/id_ed25519.pub"
-...
-Number of key(s) added: 1
-
-support@maincopy:~$ nano ~/.ssh/config
-support@maincopy:~$ cat .ssh/config
-Host testforumt
-        HostName 192.168.8.36
-        User support
-        IdentityFile ~/.ssh/id_ed25519
-
-support@maincopy:~$ ssh testforumt
-Welcome to Ubuntu 24.04.4 LTS (GNU/Linux 6.8.0-124-generic x86_64)
-...
-
-support@testforumt:~$
-
+support@maincopy:~$ ls -la /home/support/UMT-pythonweb-hw-11
+total 112
+drwxrwxr-x  6 support support 4096 Jun 21 20:50 .
+drwxr-x--- 14 support support 4096 Jun 21 20:48 ..
+drwxrwxr-x  4 support support 4096 May 28 19:51 alembic
+-rw-rw-r--  1 support support 5008 May 28 19:51 alembic.ini
+-rw-rw-r--  1 support support 4162 May 28 19:51 auth_service.py
+-rw-rw-r--  1 support support  702 May 28 19:51 config.py
+-rw-rw-r--  1 support support 3957 May 28 19:51 crud.py
+-rw-rw-r--  1 support support  396 May 28 19:51 database.py
+-rw-rw-r--  1 support support  859 May 28 19:51 docker-compose.yml
+-rw-rw-r--  1 support support  204 May 28 19:51 Dockerfile
+-rw-rw-r--  1 support support 1182 May 28 19:51 email_service.py
+-rw-rw-r--  1 support support  668 May 28 19:51 .env
+-rw-rw-r--  1 support support  693 May 28 19:51 .env.example
+-rw-rw-r--  1 support support  314 May 28 19:51 .gitignore
+-rw-rw-r--  1 support support  870 May 28 19:51 main.py
+-rw-rw-r--  1 support support 1217 May 28 19:51 models.py
+drwxrwxr-x  2 support support 4096 May 28 19:51 __pycache__
+-rw-rw-r--  1 support support 3839 May 28 19:51 README.md
+-rw-rw-r--  1 support support  191 May 28 19:51 requirements.txt
+-rw-rw-r--  1 support support 6813 May 28 19:51 routes.py
+-rwxrwxr-x  1 support support 1759 May 28 19:51 run.sh
+-rw-rw-r--  1 support support 1203 May 28 19:51 schemas.py
+drwxrwxr-x  2 support support 4096 May 28 19:51 templates
+-rw-rw-r--  1 support support 3078 May 28 19:51 ubuntu_guide.md
+drwxrwxr-x  4 support support 4096 May 28 19:51 venv
 ```
 
-Підключення працює без пароля.
+У каталозі знаходяться файли Python-застосунку, шаблони, міграції Alembic, Dockerfile, Docker Compose та файл залежностей.
 
----
+## Створення каталогу для деплою
 
-## Завдання 3. Копіювання файлів між машинами
-
----
+Створюємо каталог для деплою:
 
 ```bash
-
-support@maincopy:~$ echo "test" > test.txt
-support@maincopy:~$ cat test.txt
-test
-support@maincopy:~$ scp test.txt testforumt:~/
-test.txt                                                                                                                                               100%    5     5.1KB/s   00:00
-support@maincopy:~$ ssh testforumt "cat ~/test.txt"
-test
-
-support@maincopy:~$ ssh testforumt "mkdir -p ~/sync_folder"
-support@maincopy:~$ ssh testforumt "ls ~/"
-sync_folder
-test.txt
-support@maincopy:~$ mkdir -p local_folder
-support@maincopy:~$ echo "test 1" > local_folder/file1.txt
-support@maincopy:~$ echo "test 2" > local_folder/file2.txt
-support@maincopy:~$ ls local_folder
-file1.txt  file2.txt
-
-support@maincopy:~$ rsync -av local_folder/ testforumt:~/sync_folder/
-sending incremental file list
-./
-file1.txt
-file2.txt
-
-sent 215 bytes  received 57 bytes  108.80 bytes/sec
-total size is 14  speedup is 0.05
-support@maincopy:~$ ssh testforumt "cat ~/sync_folder/file1.txt ~/sync_folder/file2.txt"
-test 1
-test 2
-
-support@maincopy:~$ sftp testforumt
-Connected to testforumt.
-sftp> ls
-sync_folder  test.txt
-sftp> cd sync_folder
-sftp> ls
-file1.txt  file2.txt
-
+support@maincopy:~$ mkdir -p /home/support/deploy/UMT-pythonweb-hw-11
 ```
----
+
+Перевіряємо каталог:
+
+```bash
+support@maincopy:~$ ls -ld /home/support/deploy/UMT-pythonweb-hw-11
+drwxrwxr-x 2 support support 4096 Jun 21 20:48 /home/support/deploy/UMT-pythonweb-hw-11
+```
+
+## Створення Bash-скрипта
+
+Створюємо файл `/home/support/deploy.sh`:
+
+```bash
+support@maincopy:~$ cat > /home/support/deploy.sh <<'EOF'
+#!/bin/bash
+
+# Перевірка кількості аргументів та існування каталогів
+if [ "$#" -ne 2 ] || [ ! -d "$1" ] || [ ! -d "$2" ]; then
+    echo "Usage: ./deploy.sh <source_dir> <deploy_dir>"
+    exit 1
+fi
+
+SOURCE_DIR=$(realpath "$1")
+DEPLOY_DIR=$(realpath "$2")
+LOCK_FILE="/tmp/deploy.lock"
+
+# Захист від очищення каталогу з вихідними файлами
+if [ "$SOURCE_DIR" = "$DEPLOY_DIR" ]; then
+    echo "Deploy failed"
+    exit 2
+fi
+
+# Захист від паралельного запуску
+if [ -e "$LOCK_FILE" ]; then
+    echo "Deploy already running"
+    exit 1
+fi
+
+touch "$LOCK_FILE" || {
+    echo "Deploy failed"
+    exit 2
+}
+
+trap 'rm -f "$LOCK_FILE"' EXIT
+
+# Очищення каталогу деплою
+if ! find "$DEPLOY_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +; then
+    echo "Deploy failed"
+    exit 2
+fi
+
+# Копіювання нової версії застосунку
+if ! cp -a "$SOURCE_DIR"/. "$DEPLOY_DIR"/; then
+    echo "Deploy failed"
+    exit 2
+fi
+
+echo "Deploy completed successfully"
+exit 0
+EOF
+```
+
+Скрипт перевіряє аргументи та каталоги, використовує lock-файл, очищає каталог деплою та копіює нову версію застосунку.
+
+## Надання права на виконання
+
+Робимо скрипт виконуваним:
+
+```bash
+support@maincopy:~$ chmod +x /home/support/deploy.sh
+support@maincopy:~$ ls -l /home/support/deploy.sh
+-rwxrwxr-x 1 support support 1107 Jun 21 20:53 /home/support/deploy.sh
+```
+
+## Перевірка аргументів
+
+Перевіряємо запуск без аргументів:
+
+```bash
+support@maincopy:~$ /home/support/deploy.sh
+echo "Exit code: $?"
+Usage: ./deploy.sh <source_dir> <deploy_dir>
+Exit code: 1
+```
+
+Перевіряємо запуск з одним аргументом:
+
+```bash
+support@maincopy:~$ /home/support/deploy.sh /home/support/UMT-pythonweb-hw-11
+echo "Exit code: $?"
+Usage: ./deploy.sh <source_dir> <deploy_dir>
+Exit code: 1
+```
+
+Перевіряємо запуск із неіснуючим каталогом:
+
+```bash
+support@maincopy:~$ /home/support/deploy.sh /home/support/not-existing-app /home/support/deploy/UMT-pythonweb-hw-11
+echo "Exit code: $?"
+Usage: ./deploy.sh <source_dir> <deploy_dir>
+Exit code: 1
+```
+
+У всіх випадках скрипт завершується з кодом `1`.
+
+## Перевірка однакових каталогів
+
+Перевіряємо захист від використання одного каталогу як джерела і каталогу деплою:
+
+```bash
+support@maincopy:~$ /home/support/deploy.sh /home/support/UMT-pythonweb-hw-11 /home/support/UMT-pythonweb-hw-11
+echo "Exit code: $?"
+Deploy failed
+Exit code: 2
+```
+
+Скрипт зупиняє виконання, щоб не очистити вихідний каталог.
+
+## Перевірка lock-файла
+
+Створюємо lock-файл і запускаємо скрипт:
+
+```bash
+support@maincopy:~$ touch /tmp/deploy.lock
+
+/home/support/deploy.sh \
+    /home/support/UMT-pythonweb-hw-11 \
+    /home/support/deploy/UMT-pythonweb-hw-11
+
+echo "Exit code: $?"
+rm -f /tmp/deploy.lock
+Deploy already running
+Exit code: 1
+```
+
+Скрипт визначає, що інший процес деплою вже запущений, і завершує роботу.
+
+## Перевірка очищення каталогу
+
+Створюємо у каталозі деплою два файли старої версії:
+
+```bash
+support@maincopy:~$ echo "Old application file" \
+    > /home/support/deploy/UMT-pythonweb-hw-11/old_file.txt
+
+echo "OLD_CONFIG=true" \
+    > /home/support/deploy/UMT-pythonweb-hw-11/.old_config
+
+ls -la /home/support/deploy/UMT-pythonweb-hw-11
+total 16
+drwxrwxr-x 2 support support 4096 Jun 21 20:57 .
+drwxrwxr-x 3 support support 4096 Jun 21 20:48 ..
+-rw-rw-r-- 1 support support   16 Jun 21 20:57 .old_config
+-rw-rw-r-- 1 support support   21 Jun 21 20:57 old_file.txt
+```
+
+До запуску деплою каталог містить лише два тестові файли.
+
+## Запуск деплою
+
+Запускаємо деплой застосунку:
+
+```bash
+support@maincopy:~$ /home/support/deploy.sh \
+    /home/support/UMT-pythonweb-hw-11 \
+    /home/support/deploy/UMT-pythonweb-hw-11
+
+echo "Exit code: $?"
+Deploy completed successfully
+Exit code: 0
+```
+
+Код `0` означає успішне завершення.
+
+## Перевірка результату
+
+Перевіряємо вміст каталогу після деплою:
+
+```bash
+support@maincopy:~$ ls -la /home/support/deploy/UMT-pythonweb-hw-11
+total 112
+drwxrwxr-x 6 support support 4096 Jun 21 20:50 .
+drwxrwxr-x 3 support support 4096 Jun 21 20:48 ..
+drwxrwxr-x 4 support support 4096 May 28 19:51 alembic
+-rw-rw-r-- 1 support support 5008 May 28 19:51 alembic.ini
+-rw-rw-r-- 1 support support 4162 May 28 19:51 auth_service.py
+-rw-rw-r-- 1 support support  702 May 28 19:51 config.py
+-rw-rw-r-- 1 support support 3957 May 28 19:51 crud.py
+-rw-rw-r-- 1 support support  396 May 28 19:51 database.py
+-rw-rw-r-- 1 support support  859 May 28 19:51 docker-compose.yml
+-rw-rw-r-- 1 support support  204 May 28 19:51 Dockerfile
+-rw-rw-r-- 1 support support 1182 May 28 19:51 email_service.py
+-rw-rw-r-- 1 support support  668 May 28 19:51 .env
+-rw-rw-r-- 1 support support  693 May 28 19:51 .env.example
+-rw-rw-r-- 1 support support  314 May 28 19:51 .gitignore
+-rw-rw-r-- 1 support support  870 May 28 19:51 main.py
+-rw-rw-r-- 1 support support 1217 May 28 19:51 models.py
+drwxrwxr-x 2 support support 4096 May 28 19:51 __pycache__
+-rw-rw-r-- 1 support support 3839 May 28 19:51 README.md
+-rw-rw-r-- 1 support support  191 May 28 19:51 requirements.txt
+-rw-rw-r-- 1 support support 6813 May 28 19:51 routes.py
+-rwxrwxr-x 1 support support 1759 May 28 19:51 run.sh
+-rw-rw-r-- 1 support support 1203 May 28 19:51 schemas.py
+drwxrwxr-x 2 support support 4096 May 28 19:51 templates
+-rw-rw-r-- 1 support support 3078 May 28 19:51 ubuntu_guide.md
+drwxrwxr-x 4 support support 4096 May 28 19:51 venv
+```
+
+Файли застосунку успішно скопійовано разом із прихованими файлами.
+
+Перевіряємо наявність основних файлів:
+
+```bash
+support@maincopy:~$ test -f /home/support/deploy/UMT-pythonweb-hw-11/main.py \
+    && echo "main.py copied"
+
+test -f /home/support/deploy/UMT-pythonweb-hw-11/requirements.txt \
+    && echo "requirements.txt copied"
+
+test -f /home/support/deploy/UMT-pythonweb-hw-11/docker-compose.yml \
+    && echo "docker-compose.yml copied"
+
+test -d /home/support/deploy/UMT-pythonweb-hw-11/templates \
+    && echo "templates directory copied"
+main.py copied
+requirements.txt copied
+docker-compose.yml copied
+templates directory copied
+```
+
+Перевіряємо, що тестові файли старої версії видалені:
+
+```bash
+support@maincopy:~$ test ! -e /home/support/deploy/UMT-pythonweb-hw-11/old_file.txt \
+    && echo "Old file removed"
+
+test ! -e /home/support/deploy/UMT-pythonweb-hw-11/.old_config \
+    && echo "Old hidden file removed"
+Old file removed
+Old hidden file removed
+```
+
+Перевіряємо видалення lock-файла:
+
+```bash
+support@maincopy:~$ test ! -e /tmp/deploy.lock && echo "Lock file removed"
+Lock file removed
+```
+
+## Висновок
+
+Створено Bash-скрипт для деплою Python-застосунку. Скрипт перевіряє аргументи та каталоги, захищає процес від паралельного запуску, очищає каталог попередньої версії та копіює нову версію застосунку.
+
+Під час перевірки скрипт правильно повернув:
+
+- код `1` при неправильних аргументах або наявному lock-файлі;
+- код `2` при спробі використати однакові каталоги;
+- код `0` після успішного деплою.
+
+Застосунок успішно скопійовано з каталогу:
+
+```text
+/home/support/UMT-pythonweb-hw-11
+```
+
+до каталогу:
+
+```text
+/home/support/deploy/UMT-pythonweb-hw-11
+```
